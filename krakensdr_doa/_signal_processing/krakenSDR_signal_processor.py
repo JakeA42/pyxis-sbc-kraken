@@ -24,6 +24,10 @@ import os
 # os.environ['OPENBLAS_NUM_THREADS'] = '4'
 # os.environ['NUMBA_CPU_NAME'] = 'cortex-a72'
 
+print(sys.path)
+
+import serial
+
 import time
 import logging
 import threading
@@ -43,11 +47,13 @@ from functools import lru_cache
 import numpy as np
 import numpy.linalg as lin
 
+
 # Signal processing support
 import scipy
 from scipy import fft
 from scipy import signal
 from pyargus import directionEstimation as de
+
 
 # Make gpsd an optional component
 try:
@@ -73,6 +79,8 @@ class SignalProcessor(threading.Thread):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
 
+        self.ser = serial.Serial("/dev/ttyAMA0", 9600);
+        
         self.root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         doa_res_file_path = os.path.join(os.path.join(self.root_path, "_android_web", "DOA_value.html"))
         self.DOA_res_fd = open(doa_res_file_path, "w+")
@@ -371,9 +379,9 @@ class SignalProcessor(threading.Thread):
                                     confidence_str = "{:.2f}".format(np.max(conf_val))
                                     max_power_level_str = "{:.1f}".format((np.maximum(-100, max_amplitude)))
 
-                                    print("PYXIS: DOA = ");
-                                    print(DOA_str);
-                                    print("\n");
+                                    message = "DOA=" + DOA_str + ", conf= " + confidence_str + ", pwr=" + max_power_level_str + "\n"
+                                    print(message);
+                                    self.ser.write(message.encode())
 
                                     theta_0_list.append(theta_0)
                                     DOA_str_list.append(DOA_str)

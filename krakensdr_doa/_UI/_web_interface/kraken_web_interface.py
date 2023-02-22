@@ -86,6 +86,7 @@ import tooltips
 class webInterface():
 
     def __init__(self):
+
         self.user_interface = None
 
         self.logging_level = dsp_settings.get("logging_level", 0)*10
