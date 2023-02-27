@@ -24,8 +24,6 @@ import os
 # os.environ['OPENBLAS_NUM_THREADS'] = '4'
 # os.environ['NUMBA_CPU_NAME'] = 'cortex-a72'
 
-print(sys.path)
-
 import serial
 
 import time
@@ -183,6 +181,7 @@ class SignalProcessor(threading.Thread):
             Main processing thread
         """
         # scipy.fft.set_workers(4)
+        print("Running Single Processor\n")
         myip = "127.0.0.1"
         try:
             myip = json.loads(requests.get("https://ip.seeip.org/jsonip?").text)["ip"]
@@ -379,9 +378,13 @@ class SignalProcessor(threading.Thread):
                                     confidence_str = "{:.2f}".format(np.max(conf_val))
                                     max_power_level_str = "{:.1f}".format((np.maximum(-100, max_amplitude)))
 
-                                    message = "DOA=" + DOA_str + ", conf= " + confidence_str + ", pwr=" + max_power_level_str + "\n"
+                                    # PYXIS
+                                    pyxDOA_str = str(int(360 - theta_0))  # Change to this, once we upload new Android APK
+                                    pyxconfidence_str = str(int(100 * np.max(conf_val)))
+                                    pyxmax_power_level_str = str(int(10 * np.maximum(-100, max_amplitude)))
+                                    message = pyxDOA_str + "," + pyxconfidence_str + "," + pyxmax_power_level_str
                                     print(message);
-                                    self.ser.write(message.encode())
+                                    self.ser.write((message+"\n").encode())
 
                                     theta_0_list.append(theta_0)
                                     DOA_str_list.append(DOA_str)
@@ -442,7 +445,7 @@ class SignalProcessor(threading.Thread):
                             DOA_str = str(int(theta_0))
                             confidence_str = "{:.2f}".format(np.max(conf_val))
                             max_power_level_str = "{:.1f}".format((np.maximum(-100, max_amplitude)))
-
+                            
                             # Outside the foor loop at this indent
                             que_data_packet.append(['DoA Max List', self.doa_max_list])
 
