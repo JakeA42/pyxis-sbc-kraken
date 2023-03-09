@@ -63,9 +63,8 @@ except ModuleNotFoundError:
     hasgps = False
     print("Can't find gpsd - ok if no external gps used")
 
-
 class SignalProcessor(threading.Thread):
-    def __init__(self, data_que, module_receiver, logging_level=10):
+    def __init__(self, serial_port, data_que, module_receiver, logging_level=10):
 
         """
             Parameters:
@@ -77,12 +76,23 @@ class SignalProcessor(threading.Thread):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
 
-        self.ser = serial.Serial("/dev/ttyAMA0", 9600);
+        # pyxis
+        #self.ser = serial.Serial("/dev/ttyAMA0", 9600)
+        self.ser = serial_port
         
         self.root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         doa_res_file_path = os.path.join(os.path.join(self.root_path, "_android_web", "DOA_value.html"))
         self.DOA_res_fd = open(doa_res_file_path, "w+")
 
+        # now = time.localtime()
+        # self.pyx_log_start_time = int(time.time() * 1000)                                
+        # pyx_log_file = time.strftime("%m-%d-%y--%H-%M-%S", now) + ".csv"
+        # pyx_log_path = os.path.join(os.path.join(self.root_path, "..", "pyxlogs", pyx_log_file))
+        # self.pyx_log_fd = open(pyx_log_path, "w")
+        # # PYXIS log header
+        # self.pyx_log_fd.write("EpochTime,DOA,Confidence,Strength\n")
+        # self.pyx_log_fd.flush();
+        
         self.module_receiver = module_receiver
         self.data_que = data_que
         self.en_spectrum = False
@@ -181,7 +191,7 @@ class SignalProcessor(threading.Thread):
             Main processing thread
         """
         # scipy.fft.set_workers(4)
-        print("Running Single Processor\n")
+
         myip = "127.0.0.1"
         try:
             myip = json.loads(requests.get("https://ip.seeip.org/jsonip?").text)["ip"]
@@ -379,11 +389,14 @@ class SignalProcessor(threading.Thread):
                                     max_power_level_str = "{:.1f}".format((np.maximum(-100, max_amplitude)))
 
                                     # PYXIS
+                                    # epoch_time = int(time.time() * 1000)                                
                                     pyxDOA_str = str(int(360 - theta_0))  # Change to this, once we upload new Android APK
                                     pyxconfidence_str = str(int(100 * np.max(conf_val)))
                                     pyxmax_power_level_str = str(int(10 * np.maximum(-100, max_amplitude)))
                                     message = pyxDOA_str + "," + pyxconfidence_str + "," + pyxmax_power_level_str
-                                    print(message);
+                                    # self.pyx_log_fd.write(str(epoch_time - self.pyx_log_start_time) + "," + message + "\n")
+                                    # self.pyx_log_fd.flush()
+                                    print(message+"\n")
                                     self.ser.write((message+"\n").encode())
 
                                     theta_0_list.append(theta_0)

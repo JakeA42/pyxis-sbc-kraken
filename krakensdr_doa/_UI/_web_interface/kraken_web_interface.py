@@ -29,6 +29,8 @@ import subprocess
 import json
 import csv
 
+import serial
+
 import dash_core_components as dcc
 import dash_html_components as html
 
@@ -121,7 +123,10 @@ class webInterface():
         self.module_receiver.daq_rx_gain       = float(dsp_settings.get("uniform_gain", 1.4))
         self.module_receiver.rec_ip_addr       = dsp_settings.get("default_ip", "0.0.0.0")
 
-        self.module_signal_processor = SignalProcessor(data_que=self.sp_data_que, module_receiver=self.module_receiver, logging_level=self.logging_level)
+        # pyxis
+        self.ser = serial.Serial("/dev/ttyAMA0", 115200)
+        
+        self.module_signal_processor = SignalProcessor(serial_port=self.ser, data_que=self.sp_data_que, module_receiver=self.module_receiver, logging_level=self.logging_level)
         self.module_signal_processor.DOA_ant_alignment    = dsp_settings.get("ant_arrangement", "ULA")
         self.ant_spacing_meters = float(dsp_settings.get("ant_spacing_meters", 0.5))
 
@@ -2761,8 +2766,8 @@ def reconfig_daq_chain(input_value, freq, gain):
 
 if __name__ == "__main__":
     # Debug mode does not work when the data interface is set to shared-memory "shmem"! 
-    # app.run_server(debug=False, host="0.0.0.0", port=8080)
-    pass
+    app.run_server(debug=False, host="0.0.0.0", port=8080)
+    #pass
     
 """
 html.Div([
