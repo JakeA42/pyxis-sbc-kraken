@@ -125,6 +125,7 @@ class webInterface():
 
         # pyxis
         self.ser = serial.Serial("/dev/ttyAMA0", 115200)
+        self.pyxis_cmd_string = "Placeholder"
         
         self.module_signal_processor = SignalProcessor(serial_port=self.ser, data_que=self.sp_data_que, module_receiver=self.module_receiver, logging_level=self.logging_level)
         self.module_signal_processor.DOA_ant_alignment    = dsp_settings.get("ant_arrangement", "ULA")
@@ -1194,6 +1195,35 @@ def generate_config_page_layout(webInterface_inst):
         ], className="card")
 
 
+    pyxis_cmd_card = html.Div(
+        [
+            html.H2("PYXIS MCU Command", id="pyxis_cmd_title"),
+            html.Div(
+                [
+                    html.Div("Command:", id="command_string", className="field-label"),
+                    dcc.Input(
+                        id="pyxis_cmd_input",
+                        value=webInterface_inst.pyxis_cmd_string,
+                        type="text",
+                        className="field-body-textbox",
+                        debounce=True,
+                    ),
+                ],
+                className="field",
+            ),
+            html.Div(
+                [
+                    html.Button("Send",
+                                id="pyxis_cmd_button",
+                                className="btn_pyxis_send",
+                                n_clicks=0,
+                    ),
+                ],  
+            ),
+        ],
+        className="card",
+    )
+    
     recording_config_card = \
         html.Div([
             html.H2("Local Data Recording", id="data_recording_title"),
@@ -1368,7 +1398,7 @@ def generate_config_page_layout(webInterface_inst):
 
     ], className="card")
 
-    config_page_component_list = [start_stop_card, daq_status_card, daq_config_card, vfo_config_card, dsp_config_card, display_options_card, station_config_card, recording_config_card, system_control_card]
+    config_page_component_list = [start_stop_card, daq_status_card, daq_config_card, vfo_config_card, dsp_config_card, display_options_card, station_config_card, recording_config_card, system_control_card, pyxis_cmd_card]
 
     for i in range(webInterface_inst.module_signal_processor.max_vfos):
         config_page_component_list.append(vfo_card[i])
@@ -1770,6 +1800,15 @@ def update_daq_status():
            'body_file_size': {'children': recording_file_size}
     })
 
+@app.callback_shared(
+    None,
+    [Input(component_id="pyxis_cmd_button", component_property="n_clicks")],
+    [State(component_id="pyxis_cmd_input", component_property="value")],
+)
+def send_pyxis_cmd(input_value, msg):
+    print(msg)
+    webInterface_inst.ser.write((msg+"\n").encode())
+    
 
 @app.callback_shared(
     #Output(component_id="placeholder_update_freq", component_property="children"),
@@ -2054,7 +2093,7 @@ def display_page(pathname):
 def start_proc_btn(input_value):
     webInterface_inst.logger.info("Start pocessing btn pushed")
     webInterface_inst.start_processing()
-
+    
 @app.callback_shared(
     None,
     [Input(component_id='btn-stop_proc', component_property='n_clicks')],
