@@ -390,7 +390,7 @@ class SignalProcessor(threading.Thread):
 
                                     # PYXIS
                                     # epoch_time = int(time.time() * 1000)                                
-                                    pyxDOA_str = str(int(360 - theta_0))  # Change to this, once we upload new Android APK
+                                    pyxDOA_str = str(int(theta_0)) # Change to this, once we upload new Android APK
                                     pyxconfidence_str = str(int(100 * np.max(conf_val)))
                                     pyxmax_power_level_str = str(int(10 * np.maximum(-100, max_amplitude)))
                                     message = pyxDOA_str + "," + pyxconfidence_str + "," + pyxmax_power_level_str

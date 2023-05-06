@@ -2805,8 +2805,8 @@ def reconfig_daq_chain(input_value, freq, gain):
 
 if __name__ == "__main__":
     # Debug mode does not work when the data interface is set to shared-memory "shmem"! 
-    # app.run_server(debug=False, host="0.0.0.0", port=8080)
-    pass
+    app.run_server(debug=False, host="0.0.0.0", port=8080)
+    #pass
     
 """
 html.Div([
